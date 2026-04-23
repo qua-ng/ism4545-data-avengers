@@ -19,6 +19,9 @@
 #   Airflow:  postgres ~256 MB + webserver + scheduler     = ~1.5 GB
 #   Jupyter:  ~2 GB
 #   Total:    ~8-9 GB
+#
+# Apple Silicon (M1/M2/M3): platform: linux/amd64 is set on all services
+# so images built for x86 run via Rosetta emulation on ARM Macs.
 
 services:
 
@@ -28,6 +31,7 @@ services:
 
   namenode:
     image: tcsmith314/hadoop-namenode-python311:latest
+    platform: linux/amd64
     container_name: hadoop-namenode
     hostname: namenode
     ports:
@@ -55,6 +59,7 @@ services:
 
   datanode1:
     image: tcsmith314/hadoop-datanode-python311:latest
+    platform: linux/amd64
     container_name: hadoop-datanode1
     hostname: datanode1
     ports:
@@ -74,6 +79,7 @@ services:
 
   datanode2:
     image: tcsmith314/hadoop-datanode-python311:latest
+    platform: linux/amd64
     container_name: hadoop-datanode2
     hostname: datanode2
     ports:
@@ -100,6 +106,7 @@ services:
       context: ./docker
       dockerfile: Dockerfile.spark
     image: ism6562/spark-jovyan:3.5.0
+    platform: linux/amd64
     container_name: spark-master
     hostname: spark-master
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
@@ -128,6 +135,7 @@ services:
 
   spark-worker:
     image: ism6562/spark-jovyan:3.5.0
+    platform: linux/amd64
     container_name: spark-worker
     hostname: spark-worker
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
@@ -155,6 +163,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+    platform: linux/amd64
     container_name: zookeeper
     hostname: zookeeper
     ports:
@@ -179,6 +188,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
+    platform: linux/amd64
     container_name: kafka
     hostname: kafka
     ports:
@@ -217,6 +227,7 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    platform: linux/amd64
     container_name: kafka-ui
     hostname: kafka-ui
     ports:
@@ -239,6 +250,7 @@ services:
 
   postgres:
     image: postgres:15
+    platform: linux/amd64
     container_name: airflow-postgres
     hostname: postgres
     ports:
@@ -263,6 +275,7 @@ services:
       context: ./docker
       dockerfile: Dockerfile.airflow
     image: ism6562/airflow-spark:2.8.1
+    platform: linux/amd64
     container_name: airflow-init
     user: "1000:0"
     entrypoint: /bin/bash
@@ -282,6 +295,7 @@ services:
 
   airflow-webserver:
     image: ism6562/airflow-spark:2.8.1
+    platform: linux/amd64
     container_name: airflow-webserver
     hostname: airflow-webserver
     user: "1000:0"
@@ -314,6 +328,7 @@ services:
 
   airflow-scheduler:
     image: ism6562/airflow-spark:2.8.1
+    platform: linux/amd64
     container_name: airflow-scheduler
     hostname: airflow-scheduler
     user: "1000:0"
@@ -341,6 +356,7 @@ services:
 
   jupyter:
     image: jupyter/pyspark-notebook:spark-3.5.0
+    platform: linux/amd64
     container_name: mediawave-jupyter
     hostname: mediawave-jupyter
     ports:
