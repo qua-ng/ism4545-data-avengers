@@ -5,12 +5,11 @@ FROM apache/spark:3.5.0
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl && \
-    curl -fsSL https://repo.anaconda.com/miniconda/Miniconda3-py311_25.1.1-2-Linux-x86_64.sh \
-         -o /tmp/miniconda.sh && \
-    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
-    rm /tmp/miniconda.sh && \
-    /opt/miniconda/bin/conda clean -afy && \
     rm -rf /var/lib/apt/lists/*
+COPY miniconda.sh /tmp/miniconda.sh
+RUN bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh && \
+    /opt/miniconda/bin/conda clean -afy
 RUN groupadd -g 100 users 2>/dev/null || true && \
     useradd -u 1000 -g 100 -m -s /bin/bash jovyan && \
     chown -R 1000:100 /opt/spark
