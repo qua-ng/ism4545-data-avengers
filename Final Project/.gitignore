@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files (downloaded from course repo, not committed)
+data/*.csv
+data/*.csv.gz
+data/*.json
+data/*.json.gz
+data/*.parquet
+data/generate_data.py
+
+# Spark / Hadoop
+*.crc
+metastore_db/
+spark-warehouse/
+derby.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker volumes (local state)
+docker-volumes/
+
+# Secrets
+.env
