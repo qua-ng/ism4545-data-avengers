@@ -371,7 +371,13 @@ services:
     command: >
       bash -c "pip install kafka-python &&
                start-notebook.sh --NotebookApp.token='spark'"
-    mem_limit: 2g
+    mem_limit: 4g
+    healthcheck:
+      test: ["CMD-SHELL", "/etc/jupyter/docker_healthcheck.py || exit 1"]
+      interval: 10s      # Changed from 5s
+      timeout: 10s       # Changed from 3s
+      start_period: 30s  # Changed from 5s (time to boot)
+      retries: 5         # Changed from 3
     volumes:
       - ./notebooks:/home/jovyan/notebooks
       - ./data:/home/jovyan/data
