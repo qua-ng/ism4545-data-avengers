@@ -369,9 +369,9 @@ services:
       - PYSPARK_DRIVER_PYTHON=/opt/conda/bin/python3
       - HDFS_NAMENODE=hdfs://namenode:9000
     command: >
-      bash -c "pip install kafka-python &&
+      bash -c "pip install pyspark kafka-python &&
                start-notebook.sh --NotebookApp.token='spark'"
-    mem_limit: 2g
+    mem_limit: 3g
     volumes:
       - ./notebooks:/home/jovyan/notebooks
       - ./data:/home/jovyan/data
@@ -385,6 +385,12 @@ services:
         condition: service_healthy
       spark-master:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "/etc/jupyter/docker_healthcheck.py || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 networks:
   mediawave-network:
