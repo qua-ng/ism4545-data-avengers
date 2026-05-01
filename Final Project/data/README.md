@@ -1,30 +1,31 @@
-# Data Download Instructions
+# Data
 
-The MediaWave Streaming datasets are hosted in the course data repository. They are **not committed to this repo** because they total ~150 MB.
+The MediaWave Streaming dataset files are already in this folder. No need to download anything.
 
-## Download
+## Getting started
 
-Run from the project root:
+Before your first docker compose, download the miniconda installer that the Spark image needs:
 
-```
-# TODO: Juan confirms exact download commands once verified.
-# Datasets live at:
-# https://github.com/prof-tcsmith/ism6562s26-class/tree/main/final-projects/data/10-mediawave-streaming/
+cd Final Project/docker/
+curl -L -o miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py311_25.1.1-2-Linux-x86_64.sh
+cd ..
 
-# Example (one file):
-# curl -L -o data/user-profiles.csv.gz \\
-#   https://raw.githubusercontent.com/prof-tcsmith/ism6562s26-class/main/final-projects/data/10-mediawave-streaming/user-profiles.csv.gz
-```
+Then start the containers you need for your stage:
 
-## Files
+Stage 2 (Spark transforms):
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker jupyter
 
-After download, this folder should contain:
+Stage 3 (Kafka streaming):
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker zookeeper kafka kafka-ui jupyter
 
-- user-profiles.csv.gz
-- viewing-history.csv.gz
-- content-catalog.json.gz
-- user-interactions.json.gz
-- streaming-quality.csv.gz
-- generate_data.py (reference only - do not execute)
+Stage 4 (Airflow orchestration):
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker postgres airflow-init airflow-webserver airflow-scheduler
 
-These files are excluded from git via .gitignore.
+Full stack (16 GB RAM):
+docker compose up -d
+
+Then open Jupyter at http://localhost:8888?token=spark
+
+Data is available inside the containers at /home/jovyan/data/ (Jupyter) and /data/ (HDFS namenode).
+
+To stop everything: docker compose down
