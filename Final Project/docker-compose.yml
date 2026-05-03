@@ -284,6 +284,7 @@ services:
       - "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW_CONN_SPARK_DEFAULT: 'spark://spark-master:7077'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       HOME: /home/airflow
@@ -304,6 +305,7 @@ services:
       - "8080:8080"
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW_CONN_SPARK_DEFAULT: 'spark://spark-master:7077'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
@@ -335,6 +337,7 @@ services:
     command: airflow scheduler
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW_CONN_SPARK_DEFAULT: 'spark://spark-master:7077'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       HOME: /home/airflow
