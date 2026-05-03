@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.bash import BashOperator
-from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.bash import BashOperator
 
 
 default_args = {
@@ -37,16 +37,14 @@ with DAG(
         """
     )
 
-    run_data_quality_gates = SparkSubmitOperator(
+    run_data_quality_gates = BashOperator(
         task_id="run_data_quality_gates",
-        application="/opt/airflow/dags/spark_jobs/data_quality_gates.py",
-        conn_id="spark_default"
+        bash_command="spark-submit --master spark://spark-master:7077 /opt/airflow/dags/spark_jobs/data_quality_gates.py"
     )
 
-    run_stage2_batch_transformation = SparkSubmitOperator(
+    run_stage2_batch_transformation = BashOperator(
         task_id="run_stage2_batch_transformation",
-        application="/opt/airflow/dags/spark_jobs/stage2_batch_transformation.py",
-        conn_id="spark_default"
+        bash_command="spark-submit --master spark://spark-master:7077 /opt/airflow/dags/spark_jobs/stage2_batch_transformation.py"
     )
 
     validate_curated_outputs = BashOperator(
@@ -67,16 +65,14 @@ with DAG(
         """
     )
 
-    calculate_churn_risk_scores = SparkSubmitOperator(
+    calculate_churn_risk_scores = BashOperator(
         task_id="calculate_churn_risk_scores",
-        application="/opt/airflow/dags/spark_jobs/churn_risk_scoring.py",
-        conn_id="spark_default"
+        bash_command="spark-submit --master spark://spark-master:7077 /opt/airflow/dags/spark_jobs/churn_risk_scoring.py"
     )
 
-    export_daily_reports = SparkSubmitOperator(
+    export_daily_reports = BashOperator(
         task_id="export_daily_reports",
-        application="/opt/airflow/dags/spark_jobs/export_reports.py",
-        conn_id="spark_default"
+        bash_command="spark-submit --master spark://spark-master:7077 /opt/airflow/dags/spark_jobs/export_reports.py"
     )
 
     end_pipeline = EmptyOperator(task_id="end_pipeline")
