@@ -39,13 +39,13 @@ with DAG(
 
     run_data_quality_gates = SparkSubmitOperator(
         task_id="run_data_quality_gates",
-        application="/opt/airflow/spark_jobs/data_quality_gates.py",
+        application="/opt/airflow/dags/spark_jobs/data_quality_gates.py",
         conn_id="spark_default"
     )
 
     run_stage2_batch_transformation = SparkSubmitOperator(
         task_id="run_stage2_batch_transformation",
-        application="/opt/airflow/spark_jobs/stage2_batch_transformation.py",
+        application="/opt/airflow/dags/spark_jobs/stage2_batch_transformation.py",
         conn_id="spark_default"
     )
 
@@ -69,13 +69,13 @@ with DAG(
 
     calculate_churn_risk_scores = SparkSubmitOperator(
         task_id="calculate_churn_risk_scores",
-        application="/opt/airflow/spark_jobs/churn_risk_scoring.py",
+        application="/opt/airflow/dags/spark_jobs/churn_risk_scoring.py",
         conn_id="spark_default"
     )
 
     export_daily_reports = SparkSubmitOperator(
         task_id="export_daily_reports",
-        application="/opt/airflow/spark_jobs/export_reports.py",
+        application="/opt/airflow/dags/spark_jobs/export_reports.py",
         conn_id="spark_default"
     )
 
