@@ -29,11 +29,11 @@ with DAG(
     check_landing_files_exist = BashOperator(
         task_id="check_landing_files_exist",
         bash_command="""
-        hdfs dfs -test -e /mediawave-lake/landing/viewing-history/viewing-history.csv.gz &&
-        hdfs dfs -test -e /mediawave-lake/landing/user-profiles/user-profiles.csv.gz &&
-        hdfs dfs -test -e /mediawave-lake/landing/content-catalog/content-catalog.json.gz &&
-        hdfs dfs -test -e /mediawave-lake/landing/user-interactions/user-interactions.json.gz &&
-        hdfs dfs -test -e /mediawave-lake/landing/streaming-quality/streaming-quality.csv.gz
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/landing/viewing-history/viewing-history.csv.gz?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/landing/user-profiles/user-profiles.csv.gz?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/landing/content-catalog/content-catalog.json.gz?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/landing/user-interactions/user-interactions.json.gz?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/landing/streaming-quality/streaming-quality.csv.gz?op=GETFILESTATUS"
         """
     )
 
@@ -52,18 +52,18 @@ with DAG(
     validate_curated_outputs = BashOperator(
         task_id="validate_curated_outputs",
         bash_command="""
-        hdfs dfs -test -e /mediawave-lake/curated/viewing-history &&
-        hdfs dfs -test -e /mediawave-lake/curated/user-interactions &&
-        hdfs dfs -test -e /mediawave-lake/curated/enriched-viewing-sessions
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/curated/viewing-history?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/curated/user-interactions?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/curated/enriched-viewing-sessions?op=GETFILESTATUS"
         """
     )
 
     validate_analytics_outputs = BashOperator(
         task_id="validate_analytics_outputs",
         bash_command="""
-        hdfs dfs -test -e /mediawave-lake/analytics/user-monthly-engagement &&
-        hdfs dfs -test -e /mediawave-lake/analytics/content-performance &&
-        hdfs dfs -test -e /mediawave-lake/analytics/streaming-quality-region-isp
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/analytics/user-monthly-engagement?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/analytics/content-performance?op=GETFILESTATUS" &&
+        curl -sf "http://hadoop-namenode:9870/webhdfs/v1/mediawave-lake/analytics/streaming-quality-region-isp?op=GETFILESTATUS"
         """
     )
 
