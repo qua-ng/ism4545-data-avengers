@@ -12,7 +12,7 @@ Repository: https://github.com/qua-ng/ism4545-data-avengers
 
 | Name | Role | GitHub |
 |------|------|--------|
-| Juan | Integration Lead + HDFS (Stage 1) | @___ |
+| Juan | Integration Lead + HDFS (Stage 1) | @juanesriverae-bit |
 | Yusuke | Spark Batch (Stage 2) | @___ |
 | Quang | Kafka + Streaming (Stage 3) | @qua-ng |
 | Alex | Airflow + Data Quality (Stage 4) | @___ |
@@ -22,7 +22,11 @@ Repository: https://github.com/qua-ng/ism4545-data-avengers
 
 ## Project Scenario
 
-_TODO: 2-3 paragraphs summarizing MediaWave business problem (content recommendation + viewer engagement), the datasets we work with, and the 5-7 questions we answer. Helen fills this in after Day 2._
+MediaWave Streaming is a fictional video streaming platform managing 200,000 subscribers, a 20,000-title content catalog, and over 700,000 viewing sessions. Despite generating large volumes of data across five separate systems, the platform had no unified way to answer cross-source business questions — such as which titles cost more in licensing than they earn in viewing hours, or which early behavioral signals predict subscriber cancellation.
+
+This project builds a four-layer big data pipeline that ingests all five raw data sources into an HDFS data lake, transforms and joins them using PySpark, processes real-time viewing events through Kafka and Spark Structured Streaming, and orchestrates the entire workflow with Apache Airflow. The pipeline produces three analytics tables that directly support content ROI analysis, churn prediction, and CDN investment decisions.
+
+The five datasets used are: viewing history (700K records), user profiles (200K records), content catalog (20K titles), user interactions (550K records), and streaming quality metrics (200K records).
 
 ---
 
@@ -35,7 +39,7 @@ The pipeline implements four layers, processing MediaWave streaming data from ra
 3. **Stream** - Kafka + Spark Structured Streaming for real-time viewing events
 4. **Orchestrate** - Airflow DAGs with quality gates, retries, and monitoring
 
-![Architecture Diagram](docs/architecture-diagram.png)
+![Architecture Diagram](notebooks/architecture-diagram.png)
 
 ---
 
@@ -48,19 +52,25 @@ A grader should be able to clone this repo, run `docker compose up -d`, and repr
 - Docker Desktop (>= 20.10) with **at least 8 GB RAM allocated**
 - Git
 - ~10 GB free disk space
-- (Apple Silicon users: Rosetta 2 enabled - `platform: linux/amd64` is set on all services)
+- Apple Silicon users: Rosetta 2 enabled (`platform: linux/amd64` is set on all services)
 
 ### Step 1 - Clone the repo
+
 ```
 git clone https://github.com/qua-ng/ism4545-data-avengers.git
 cd ism4545-data-avengers/"Final Project"
 ```
 
-### Step 2 - Download the MediaWave datasets
+### Step 2 - Download the Miniconda installer (required before first build)
 
-Datasets are hosted in the course data repository (~150 MB total, not committed here). See `data/README.md` for full instructions.
+The Spark Docker image requires Miniconda. Run this once inside the `docker/` folder before building:
+
+```
+curl -L -o docker/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py311_25.1.1-2-Linux-x86_64.sh
+```
 
 ### Step 3 - Boot the full stack
+
 ```
 docker compose up -d
 ```
@@ -75,49 +85,91 @@ Wait ~3 minutes for all services to become healthy. Then verify:
 | Kafka UI | http://localhost:8088 | - |
 | Jupyter | http://localhost:8888?token=spark | token: spark |
 
-### Step 4 - Run the batch pipeline
+### Step 4 - Run Stage 1: Load data into HDFS
 
-_TODO: Alex fills in Airflow DAG trigger commands._
+Open Jupyter at http://localhost:8888?token=spark and run all cells in:
 
-### Step 5 - Run the streaming pipeline
+```
+notebooks/01-data-lake-setup.ipynb
+```
 
-_TODO: Quang fills in producer + consumer commands._
+This uploads all 5 datasets into the HDFS landing zone and creates the full data lake directory structure.
+
+### Step 5 - Run Stage 2: Spark batch transformation
+
+In Jupyter, run all cells in:
+
+```
+notebooks/stage2_batch_transformation.ipynb
+```
+
+This cleans the raw data, performs three-way joins, and writes curated and analytics Parquet tables to HDFS.
+
+### Step 6 - Run Stage 3: Kafka streaming pipeline
+
+In Jupyter, run all cells in:
+
+```
+notebooks/stage3-streaming.ipynb
+```
+
+This creates the Kafka topic, produces 200 synthetic user activity events, and runs three streaming queries: concurrent viewers per title (5-min window), poor experience alerts (buffering > 3 per session), and trending spike detection. Each query runs for 60 seconds then stops automatically.
+
+**Important:** Run this notebook fully before triggering the Airflow DAG in Step 7, so Spark resources are free.
+
+### Step 7 - Run Stage 4: Airflow orchestration
+
+Go to Airflow at http://localhost:8080 (admin / admin), find `mediawave_batch_pipeline` and click the play button to trigger a manual run.
+
+The DAG runs 8 tasks in sequence:
+
+1. Check all 5 landing zone files exist
+2. Run data quality gates
+3. Run Stage 2 batch transformation
+4. Validate curated outputs
+5. Validate analytics outputs
+6. Calculate churn risk scores
+7. Export daily reports
+8. End pipeline
+
+All tasks should complete green in approximately 8-10 minutes.
 
 ---
 
 ## Data Sources
 
-All datasets are pre-generated and hosted in the course data repository:
-https://github.com/prof-tcsmith/ism6562s26-class/tree/main/final-projects/data/10-mediawave-streaming/
+All datasets are included in the repository under `data/`:
 
-| File | Description | Format |
-|------|-------------|--------|
-| user-profiles.csv.gz | Subscriber demographics, signup, subscription tier | CSV |
-| viewing-history.csv.gz | Per-session viewing events with completion % | CSV |
-| content-catalog.json.gz | Title metadata: genre, cast, runtime, release year | JSON |
-| user-interactions.json.gz | Ratings, likes, searches, clicks | JSON |
-| streaming-quality.csv.gz | Buffering, bitrate, resolution, device | CSV |
+| File | Records | Description | Format |
+|------|---------|-------------|--------|
+| user-profiles.csv.gz | 200,000 | Subscriber demographics, signup, subscription tier | CSV |
+| viewing-history.csv.gz | 700,000 | Per-session viewing events with completion % | CSV |
+| content-catalog.json.gz | 20,000 | Title metadata: genre, IMDB score, license cost | JSON |
+| user-interactions.json.gz | 550,000 | Ratings, likes, searches, clicks | JSON |
+| streaming-quality.csv.gz | 200,000 | Buffering, bitrate, resolution, latency | CSV |
 
-See `data/README.md` for download instructions.
+Original source: https://github.com/prof-tcsmith/ism6562s26-class/tree/main/final-projects/data/10-mediawave-streaming/
 
 ---
 
 ## Repository Structure
+
 ```
 Final Project/
 ├── docker-compose.yml          # Full infrastructure (HDFS, Spark, Kafka, Airflow, Jupyter)
 ├── docker/                     # Custom Dockerfiles (Spark, Airflow)
-├── data/                       # Dataset download instructions
-├── docs/                       # Architecture diagram + per-stage design notes
+├── data/                       # All 5 datasets + download instructions
 ├── notebooks/                  # Jupyter notebooks (one per pipeline stage)
-├── src/
-│   ├── common/                 # Shared schemas, paths, quality functions
-│   ├── ingest/                 # HDFS load scripts (Stage 1)
-│   ├── transforms/             # Spark cleaning, joins, aggregations (Stage 2)
-│   └── streaming/              # Structured Streaming consumer (Stage 3)
-├── producers/                  # Kafka event producer (Stage 3)
+│   ├── 01-data-lake-setup.ipynb           # Stage 1: HDFS data lake
+│   ├── stage2_batch_transformation.ipynb  # Stage 2: Spark batch
+│   └── stage3-streaming.ipynb             # Stage 3: Kafka streaming
 ├── dags/                       # Airflow DAGs (Stage 4)
-├── report/                     # Final written report (PDF + source)
+│   ├── batch_pipeline.py       # Main 8-task orchestration DAG
+│   ├── streaming_monitor.py    # 15-min streaming health monitor
+│   └── spark_jobs/             # Spark scripts called by Airflow
+├── producers/                  # Kafka event producer (Stage 3)
+├── src/                        # Shared schemas and transform modules
+├── report/                     # Final written report
 └── presentation/               # Slide deck + screenshots
 ```
 
@@ -135,25 +187,37 @@ The full stack targets ~8 GB RAM for all services combined.
 | Airflow | postgres + webserver + scheduler | ~1.5 GB |
 | Jupyter | notebook server | ~2 GB |
 
-For 8 GB machines, see "Lightweight Mode" below.
-
 ### Lightweight Mode (8 GB machines)
 
-_TODO: Add lightweight profile commands once configured. Juan._
+Run only the services needed for each stage:
+
+**Stage 1 + 2 only:**
+```
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker jupyter
+```
+
+**Stage 3 only:**
+```
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker zookeeper kafka kafka-ui jupyter
+```
+
+**Stage 4 only:**
+```
+docker compose up -d namenode datanode1 datanode2 spark-master spark-worker postgres airflow-init airflow-webserver airflow-scheduler
+```
 
 ---
 
 ## Key Findings
 
-_TODO: Top 3 business insights for MediaWave. Helen fills in after Day 5._
+1. **Content ROI varies by 860x** — The bottom decile of titles by cost-per-viewing-hour drives 17% of total catalog spend ($3.13B annually) with disproportionately low engagement. Dropping these titles at the next license cycle is the highest-impact action available.
 
-1. _Finding 1_
-2. _Finding 2_
-3. _Finding 3_
+2. **Monthly watch hours is the dominant churn signal** — Churned users averaged 15.2 hours/month vs 26.4 hours for retained users (42% gap). Completion rate, buffering, and unique titles showed no meaningful separation between cohorts.
+
+3. **Streaming quality is geographically uniform** — All 7 CDN regions and 10 ISPs cluster within a 3.3% spread of buffering events, with near-zero correlation to completion rate. CDN investment should be deprioritized in favor of content and engagement levers.
 
 ---
 
 ## Acknowledgments
 
 Built for ISM 6562 (Big Data for Business Applications), Spring 2026, Dr. Tim Smith. Pipeline architecture follows the four-layer pattern covered in Weeks 8-11.
-
